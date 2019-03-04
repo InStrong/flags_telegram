@@ -1,4 +1,4 @@
-import javassist.tools.web.BadHttpRequest;
+
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
@@ -6,8 +6,6 @@ import org.telegram.telegrambots.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.api.objects.*;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
-import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +14,12 @@ import java.util.Random;
 
 
 public class Bot extends TelegramLongPollingBot {
+
+    String PATH_NAME = "src/main/resources/";
+
+
+
+
     Map<String,Integer> list = new HashMap<>();
     String temp="";
     static ArrayList<String> correctAnswers = new ArrayList<>();
@@ -27,6 +31,14 @@ public class Bot extends TelegramLongPollingBot {
 
 
     public static void main(String[] args) {
+
+        SQLHandler sqlHandler = new SQLHandler();
+        sqlHandler.connect();
+        sqlHandler.info();
+        sqlHandler.disconnect();
+
+
+
         ApiContextInitializer.init();
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
         try {
@@ -44,7 +56,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "739164691:AAGg44HjBh9srbpdUg_nYi5UfESRMIsbrNY";
+        return "645703802:AAHsSt7Tc7jmLd52AzbjzsVfukz7wZPH6QI";
     }
 
     @Override
@@ -64,7 +76,6 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void sendMsg(Message message, String text) {
-        ArrayList<Score> userlist = new ArrayList<>();
 
         correctAnswers.add("Верно!");
         correctAnswers.add("Молодец!");
@@ -95,45 +106,48 @@ public class Bot extends TelegramLongPollingBot {
         sendPhoto.setChatId(message.getChatId().toString());
         sendMessage.setChatId(message.getChatId().toString());
 
-        for (int i = 0; i < userlist.size(); i++) {
-            if (!userlist.get(i).userId.equals(message.getChat().getUserName())){
-                userlist.add(new Score(message.getChat().getUserName()));
-            }
-        }
 
-        for (int i = 0; i < userlist.size(); i++) {
-            System.out.println(userlist.get(i).userId);
-        }
         if (message.getText().startsWith("/help") || message.getText().startsWith("/start")) {
             try {
-                sendMessage(sendMessage);
+                execute(sendMessage);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
-        } else {
-            File file = new File("flags"+File.separator+ message.getText().toLowerCase() + ".png");
+
+        }
+        if (message.getText().length()!=2) {
+            try {
+                execute(sendMessage.setText("Нужно ввести 2 буквы, давай попробуем еще раз"));
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        }
+
+        else {
+            File file = new File(PATH_NAME+"flags"+File.separator+ message.getText().toLowerCase() + ".png");
             if (file.exists()) {
                 for (int i = 0; i < shortName.length; i++) {
                     if (message.getText().toUpperCase().equals(shortName[i]))
                         temp = fullName[i];
                 }
                 sendPhoto.setNewPhoto(file);
-                sendMessage.setText(correctAnswers.get(new Random().nextInt(8))+"\nЭто флаг страны : "+temp+"" +
+                sendMessage.setText(correctAnswers.get(new Random().nextInt(correctAnswers.size()))+"\nЭто флаг страны : "+temp+"" +
                         "\nВот ссылка, почитай про эту страну : https://ru.wikipedia.org/wiki/"+temp);
                 list.put(message.getChat().getUserName(),list.get(message.getChat().getUserName())+1);
+
                 System.out.println(message.getChat().getUserName()+" : "+temp);
 
             } else {
 
-                sendPhoto.setNewPhoto(new File( "flags"+File.separator+"pirate.jpg"));
-                sendMessage.setText(wrongAnswers.get(new Random().nextInt(8)));
+                sendPhoto.setNewPhoto(new File( PATH_NAME+"flags"+File.separator+"pirate.jpg"));
+                sendMessage.setText(wrongAnswers.get(new Random().nextInt(wrongAnswers.size())));
                 list.put(message.getChat().getUserName(),list.get(message.getChat().getUserName())-1);
                 System.out.println(message.getChat().getUserName()+" : "+message.getText());
             }
 
             try {
                 sendPhoto(sendPhoto);
-                sendMessage(sendMessage);
+                execute(sendMessage);
                 for (Map.Entry<String, Integer> pair : list.entrySet())
                 {
                     String key = pair.getKey();
