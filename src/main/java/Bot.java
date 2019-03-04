@@ -17,10 +17,8 @@ public class Bot extends TelegramLongPollingBot {
 
     String PATH_NAME = "src/main/resources/";
 
+    SQLHandler sqlHandler = new SQLHandler();
 
-
-
-    Map<String,Integer> list = new HashMap<>();
     String temp="";
     static ArrayList<String> correctAnswers = new ArrayList<>();
     static ArrayList<String> wrongAnswers = new ArrayList<>();
@@ -31,11 +29,6 @@ public class Bot extends TelegramLongPollingBot {
 
 
     public static void main(String[] args) {
-
-        SQLHandler sqlHandler = new SQLHandler();
-        sqlHandler.connect();
-        sqlHandler.info();
-        sqlHandler.disconnect();
 
 
 
@@ -51,7 +44,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "ИМЯ_ПОЛЬЗОВАТЕЛЯ_ВАШЕГО_БОТА";
+        return "Страны мира";
     }
 
     @Override
@@ -62,10 +55,13 @@ public class Bot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
-        if (!list.containsKey(message.getChat().getUserName())) {
-            list.put(message.getChat().getUserName(), 0);
-        }
+
         if (message != null && message.hasText()) {
+            sqlHandler.connect();
+            if (!sqlHandler.isUserRegistered(message.getChat().getUserName())) {
+                sqlHandler.registerUser(message.getChat().getUserName(), message.getChat().getFirstName());
+                sqlHandler.disconnect();
+            }
             if (message.getText().equals("/help")) {
                 sendMsg(message, "Привет, ");
             }
@@ -73,6 +69,10 @@ public class Bot extends TelegramLongPollingBot {
                 sendMsg(message, "Я не знаю что ответить на это");
 
         }
+    }
+
+    private void addUserToDB(String id){
+
     }
 
     private void sendMsg(Message message, String text) {
@@ -94,8 +94,8 @@ public class Bot extends TelegramLongPollingBot {
         wrongAnswers.add("Мдааа...");
         wrongAnswers.add("Я был лучшего о тебе мнения");
 
-        SendMessage sendMessage = new SendMessage();
-        SendPhoto sendPhoto = new SendPhoto();
+        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId().toString());
+        SendPhoto sendPhoto = new SendPhoto().setChatId(message.getChatId().toString());
         sendMessage.enableMarkdown(true);
         sendMessage.setText("Правила игры: \n" +
                 "Нужно вспомнить как можно больше стран. Вводить нужно сокращенное название на английском языке из двух букв, например RU\n" +
@@ -103,8 +103,7 @@ public class Bot extends TelegramLongPollingBot {
                 "Если будет введено неверное значение, Вам придет в ответ пиратский флаг и Вы потеряете 1 золотую монету\n" +
                 "Удачной игры!");
 
-        sendPhoto.setChatId(message.getChatId().toString());
-        sendMessage.setChatId(message.getChatId().toString());
+
 
 
         if (message.getText().startsWith("/help") || message.getText().startsWith("/start")) {
@@ -130,30 +129,36 @@ public class Bot extends TelegramLongPollingBot {
                     if (message.getText().toUpperCase().equals(shortName[i]))
                         temp = fullName[i];
                 }
-                sendPhoto.setNewPhoto(file);
-                sendMessage.setText(correctAnswers.get(new Random().nextInt(correctAnswers.size()))+"\nЭто флаг страны : "+temp+"" +
-                        "\nВот ссылка, почитай про эту страну : https://ru.wikipedia.org/wiki/"+temp);
-                list.put(message.getChat().getUserName(),list.get(message.getChat().getUserName())+1);
+                if (sqlHandler.isCountryAlreadyFound(message.getChat().getUserName(),message.getText().toUpperCase())){
+                    sendPhoto.setNewPhoto(new File( PATH_NAME+"flags"+File.separator+"pirate.jpg"));
+                    sendMessage.setText("Это "+temp+" но ты уже отгадывал эту страну, счёт остается прежним : "+sqlHandler.currentScore(message.getChat().getUserName()));
+                }
+                else {
+                    sqlHandler.addFoundedCountry(message.getChat().getUserName(),message.getText().toUpperCase());
+                    sendPhoto.setNewPhoto(file);
+                    sqlHandler.plusPoint(message.getChat().getUserName());
+                    sendMessage.setText(correctAnswers.get(new Random().nextInt(correctAnswers.size()))+"\nЭто флаг страны : "+temp+"" +
+                            "\nВот ссылка, почитай про эту страну : https://ru.wikipedia.org/wiki/"+temp+"" +
+                            "\nМонетка твоя!\nТвой текущий счёт : "+sqlHandler.currentScore(message.getChat().getUserName()));
+                }
 
-                System.out.println(message.getChat().getUserName()+" : "+temp);
+
+
+
 
             } else {
-
+                sqlHandler.minusPoint(message.getChat().getUserName());
                 sendPhoto.setNewPhoto(new File( PATH_NAME+"flags"+File.separator+"pirate.jpg"));
-                sendMessage.setText(wrongAnswers.get(new Random().nextInt(wrongAnswers.size())));
-                list.put(message.getChat().getUserName(),list.get(message.getChat().getUserName())-1);
-                System.out.println(message.getChat().getUserName()+" : "+message.getText());
+                sendMessage.setText(wrongAnswers.get(new Random().nextInt(wrongAnswers.size()))+"\nТы теряешь одну монету." +
+                        "\nТвой текущий счёт :"+sqlHandler.currentScore(message.getChat().getUserName()));
+
             }
+
+            sqlHandler.info();
 
             try {
                 sendPhoto(sendPhoto);
                 execute(sendMessage);
-                for (Map.Entry<String, Integer> pair : list.entrySet())
-                {
-                    String key = pair.getKey();
-                    Integer value = pair.getValue();
-                    System.out.println(key + ":" + value);
-                }
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
