@@ -15,7 +15,7 @@ import java.util.Random;
 
 public class Bot extends TelegramLongPollingBot {
 
-    String PATH_NAME = "src/main/resources/";
+   // String PATH_NAME = "src/main/resources/";
 
     SQLHandler sqlHandler = new SQLHandler();
 
@@ -49,7 +49,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "645703802:AAHsSt7Tc7jmLd52AzbjzsVfukz7wZPH6QI";
+        return "739164691:AAGg44HjBh9srbpdUg_nYi5UfESRMIsbrNY";
     }
 
     @Override
@@ -60,7 +60,7 @@ public class Bot extends TelegramLongPollingBot {
             sqlHandler.connect();
             if (!sqlHandler.isUserRegistered(message.getChat().getUserName())) {
                 sqlHandler.registerUser(message.getChat().getUserName(), message.getChat().getFirstName());
-                sqlHandler.disconnect();
+               // sqlHandler.disconnect();
             }
             if (message.getText().equals("/help")) {
                 sendMsg(message, "Привет, ");
@@ -123,14 +123,14 @@ public class Bot extends TelegramLongPollingBot {
         }
 
         else {
-            File file = new File(PATH_NAME+"flags"+File.separator+ message.getText().toLowerCase() + ".png");
+            File file = new File("flags"+File.separator+ message.getText().toLowerCase() + ".png");
             if (file.exists()) {
                 for (int i = 0; i < shortName.length; i++) {
                     if (message.getText().toUpperCase().equals(shortName[i]))
                         temp = fullName[i];
                 }
                 if (sqlHandler.isCountryAlreadyFound(message.getChat().getUserName(),message.getText().toUpperCase())){
-                    sendPhoto.setNewPhoto(new File( PATH_NAME+"flags"+File.separator+"pirate.jpg"));
+                    sendPhoto.setNewPhoto(new File( "flags"+File.separator+"pirate.jpg"));
                     sendMessage.setText("Это "+temp+" но ты уже отгадывал эту страну, счёт остается прежним : "+sqlHandler.currentScore(message.getChat().getUserName()));
                 }
                 else {
@@ -148,7 +148,7 @@ public class Bot extends TelegramLongPollingBot {
 
             } else {
                 sqlHandler.minusPoint(message.getChat().getUserName());
-                sendPhoto.setNewPhoto(new File( PATH_NAME+"flags"+File.separator+"pirate.jpg"));
+                sendPhoto.setNewPhoto(new File( "flags"+File.separator+"pirate.jpg"));
                 sendMessage.setText(wrongAnswers.get(new Random().nextInt(wrongAnswers.size()))+"\nТы теряешь одну монету." +
                         "\nТвой текущий счёт :"+sqlHandler.currentScore(message.getChat().getUserName()));
 

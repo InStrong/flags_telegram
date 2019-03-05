@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="Flags_bot:jar">
+  <artifact type="jar" build-on-make="true" name="Flags_bot:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/Flags_bot_jar</output-path>
     <root id="archive" name="Flags_bot.jar">
       <element id="directory" name="META-INF">

@@ -1,7 +1,7 @@
 import java.sql.*;
 
 public class SQLHandler {
-    private static final String url = "jdbc:mysql://localhost:3306/flags?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+    private static final String url = "jdbc:mysql://flags.ccezxcw0ssmb.eu-central-1.rds.amazonaws.com:3306/flags?ftimeCode=false&serverTimezone=UTC";
     private static final String user = "root";
     private static final String password = "fhwheyrfhnjy94";
 
@@ -11,9 +11,12 @@ public class SQLHandler {
 
     protected void connect(){
         try {
+           Class.forName("com.mysql.jdbc.Driver");
             con = DriverManager.getConnection(url, user, password);
             stmt = con.createStatement();
         } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
