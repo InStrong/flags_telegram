@@ -1,9 +1,17 @@
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
+import java.io.File;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class SQLHandler {
-    private static final String url = "jdbc:mysql://flags.ccezxcw0ssmb.eu-central-1.rds.amazonaws.com:3306/flags?ftimeCode=false&serverTimezone=UTC";
-    private static final String user = "root";
-    private static final String password = "fhwheyrfhnjy94";
+    private static final String url = "jdbc:mysql://localhost:3306/flags?ftimeCode=false&serverTimezone=UTC";
+    private static final String user = "instrong";
+    private static final String password = "fhwheyrfhnjy";
+   // private static final String user = "root";
+   // private static final String password = "fhwheyrfhnjy94";
 
     private static Connection con;
     private static Statement stmt;
@@ -73,6 +81,44 @@ public class SQLHandler {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+    protected String upTo20Spaces(String s){
+        StringBuilder sb = new StringBuilder();
+        char[] str = s.toCharArray();
+        for (int i = 0; i < s.length(); i++) {
+            if (str[i]!='_') {
+                sb.append(str[i]);
+            }
+            else sb.append("_");
+        }
+        do{
+            sb.append(" ");
+        } while (sb.toString().length()==25);
+        return sb.toString();
+    }
+
+    protected String top10(){
+        StringBuilder sb= new StringBuilder();
+        int i=1;
+        String query = "SELECT * FROM flags.user_score order by score DESC LIMIT 10";
+
+        try {
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()){
+                sb.append(i++);
+                sb.append(". ");
+                sb.append("@");
+                sb.append(upTo20Spaces(rs.getString(1)));
+                sb.append(" : ").append(rs.getInt(3)).append(" монет");
+                sb.append(System.lineSeparator());
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
     }
 
 
