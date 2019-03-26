@@ -7,19 +7,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SQLHandler {
-    private static final String url = "jdbc:mysql://localhost:3306/flags?ftimeCode=false&serverTimezone=UTC";
-    private static final String user = "instrong";
-    private static final String password = "fhwheyrfhnjy";
-   // private static final String user = "root";
-   // private static final String password = "fhwheyrfhnjy94";
+    private static final String url = "jdbc:mysql://localhost:3306/flags?ftimeCode=false&serverTimezone=UTC&useSSL=false";
+    private static final String user = "root";
+    private static final String password = "";
 
-    private static Connection con;
-    private static Statement stmt;
-    private static ResultSet rs;
+    private Connection con;
+    private Statement stmt;
+    private ResultSet rs;
 
-    protected void connect(){
+    public void connect(){
         try {
-           Class.forName("com.mysql.jdbc.Driver");
+           Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(url, user, password);
             stmt = con.createStatement();
         } catch (SQLException e) {
@@ -29,7 +27,7 @@ public class SQLHandler {
         }
     }
 
-    protected void disconnect(){
+    public void disconnect(){
         try {
             con.close();
             stmt.close();
@@ -38,7 +36,7 @@ public class SQLHandler {
         }
     }
 
-    protected boolean isUserRegistered(String userId){
+    public boolean isUserRegistered(String userId){
         int temp=-1;
         String query = "SELECT EXISTS(SELECT * FROM flags.user_score WHERE id='"+userId+"')";
 
@@ -56,7 +54,7 @@ public class SQLHandler {
         return false;
     }
 
-    protected void registerUser(String userId,String firstName){
+    public void registerUser(String userId,String firstName){
         String query = "REPLACE INTO flags.user_score (id,FirstName,score) VALUES ('"+userId+"','"+firstName+"','0')";
         try {
             stmt.executeUpdate(query);
@@ -65,7 +63,7 @@ public class SQLHandler {
         }
     }
 
-    protected void plusPoint(String userName){
+    public void plusPoint(String userName){
         String query = "UPDATE flags.user_score SET score = score + 1 WHERE id='"+userName+"'";
         try {
             stmt.executeUpdate(query);
@@ -74,7 +72,7 @@ public class SQLHandler {
         }
     }
 
-    protected void minusPoint(String userName){
+    public void minusPoint(String userName){
         String query = "UPDATE flags.user_score SET score = score - 1 WHERE id='"+userName+"'";
         try {
             stmt.executeUpdate(query);
@@ -84,7 +82,7 @@ public class SQLHandler {
     }
 
 
-    protected String upTo20Spaces(String s){
+    public String upTo20Spaces(String s){
         StringBuilder sb = new StringBuilder();
         char[] str = s.toCharArray();
         for (int i = 0; i < s.length(); i++) {
@@ -99,7 +97,7 @@ public class SQLHandler {
         return sb.toString();
     }
 
-    protected String top10(){
+    public String top10(){
         StringBuilder sb= new StringBuilder();
         int i=1;
         String query = "SELECT * FROM flags.user_score order by score DESC LIMIT 10";
@@ -123,7 +121,7 @@ public class SQLHandler {
 
 
 
-    protected void addFoundedCountry(String userId,String countryName){
+    public void addFoundedCountry(String userId,String countryName){
         String query = "INSERT INTO flags.founded_countries (userId,country) VALUES ('"+userId+"','"+countryName+"')";
         try {
             stmt.executeUpdate(query);
@@ -132,7 +130,7 @@ public class SQLHandler {
         }
     }
 
-    protected boolean isCountryAlreadyFound(String userId,String countryName){
+    public boolean isCountryAlreadyFound(String userId,String countryName){
         String query = "select userid,country from flags.founded_countries where userid='"+userId+"'";
         String tempId = "";
         String tempCountryName = "";
@@ -153,7 +151,7 @@ public class SQLHandler {
 
     }
 
-    protected int currentScore(String userId){
+    public int currentScore(String userId){
         String query = "select score from user_score where id='"+userId+"'";
         int currentScore=0;
         try {
@@ -169,7 +167,7 @@ public class SQLHandler {
 
     }
 
-    protected void info() {
+    public void info() {
         String query = "select id,FirstName,score from user_score";
 
         try {
@@ -178,7 +176,6 @@ public class SQLHandler {
                 String id = rs.getString(1);
                 String firstName = rs.getString(2);
                 int score = rs.getInt(3);
-                System.out.printf("id: %s, name: %s, score: %d %n", id, firstName, score);
             }
         } catch (SQLException e) {
             e.printStackTrace();
